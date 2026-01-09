@@ -13,11 +13,18 @@ export const OFFICIAL_DOC_TEMPLATE = `<!DOCTYPE html>
       --accent: #0f172a; 
       --page-bg: #cbd5e1;
       --paper: #ffffff;
-      --page-width: 210mm;
       
-      --header-height: 130px; 
-      --footer-height: 70px;  
-      --content-margin: 20mm;
+      /* Dimensões A4 Exatas para Web */
+      --a4-width: 210mm;
+      --a4-height: 297mm; /* Aproximadamente 1123px em 96dpi */
+      
+      /* Áreas Reservadas */
+      --header-height: 140px; 
+      --footer-height: 80px;
+      --margin-side: 20mm;
+      
+      /* Altura segura para conteúdo = A4 - Header - Footer - Padding de segurança */
+      --content-height-limit: 900px; 
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -30,91 +37,71 @@ export const OFFICIAL_DOC_TEMPLATE = `<!DOCTYPE html>
       align-items: center;
       padding: 40px 0;
       color: #1e293b;
-      counter-reset: page;
       -webkit-font-smoothing: antialiased;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
     }
 
-    /* CONTAINER VISUAL (Tela) */
+    /* --- ESTILOS DA PÁGINA FÍSICA --- */
     .a4-page {
-      width: var(--page-width);
-      min-height: 297mm;
+      width: var(--a4-width);
+      height: var(--a4-height);
       background-color: var(--paper);
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
       position: relative;
       margin-bottom: 30px;
-      display: flex;
-      flex-direction: column;
-      /* Padding removido aqui pois será controlado pelas células da tabela para garantir alinhamento */
-      padding: 0; 
+      overflow: hidden; /* Garante que nada estoure visualmente */
+      display: block;
+      page-break-after: always; /* Força nova folha na impressão */
     }
 
-    /* ESTRUTURA DE REPETIÇÃO */
-    table.report-container {
+    /* Elementos Absolutos na Página */
+    .page-header {
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
-      border-collapse: collapse;
-      border-spacing: 0;
-      table-layout: fixed;
-    }
-    
-    tr, td { border: none; padding: 0; }
-
-    /* ESTILOS DE CABEÇALHO (Repete em todas as páginas) */
-    thead.report-header {
-      display: table-header-group;
-    }
-
-    .header-cell {
-      /* Altura fixa para reservar espaço */
       height: var(--header-height);
-      vertical-align: top;
+      padding: 15mm var(--margin-side) 0 var(--margin-side);
+      background: white;
+      z-index: 10;
     }
 
-    .header-content {
+    .page-footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
       width: 100%;
-      height: 100%;
-      padding: 15mm var(--content-margin) 0 var(--content-margin);
+      height: var(--footer-height);
+      padding: 0 var(--margin-side) 15mm var(--margin-side);
+      background: white;
+      z-index: 10;
+    }
+
+    .page-content-area {
+      position: absolute;
+      top: var(--header-height);
+      left: 0;
+      width: 100%;
+      /* Altura dinâmica preenchida pelo script, mas com limite visual */
+      padding: 10px var(--margin-side);
+    }
+
+    /* --- LAYOUT DO HEADER/FOOTER --- */
+    .header-content {
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
       border-bottom: 2px solid var(--primary);
       padding-bottom: 8px;
-      background-color: white;
+      height: 100%;
     }
-
     .header-left { display: flex; align-items: center; gap: 15px; }
     .header-left img { height: 60px; width: auto; }
-    .header-left .titles h1 { 
-      font-size: 13pt; 
-      font-weight: 900; 
-      text-transform: uppercase; 
-      line-height: 1.1;
-    }
-    .header-left .titles h2 { 
-      font-size: 9pt; 
-      font-weight: 500; 
-      color: #334155; 
-      white-space: pre-line;
-    }
-
+    .header-left .titles h1 { font-size: 13pt; font-weight: 900; text-transform: uppercase; line-height: 1.1; }
+    .header-left .titles h2 { font-size: 9pt; font-weight: 500; color: #334155; white-space: pre-line; }
     .header-right { text-align: right; margin-bottom: 2px; }
     .header-right p { font-size: 8pt; font-weight: 700; color: #64748b; text-transform: uppercase; line-height: 1.4; }
 
-
-    /* ESTILOS DE RODAPÉ (Repete em todas as páginas) */
-    tfoot.report-footer {
-      display: table-footer-group;
-    }
-
-    .footer-cell {
-      height: var(--footer-height);
-      vertical-align: bottom;
-    }
-
     .footer-content {
-      width: 100%;
-      padding: 0 var(--content-margin) 15mm var(--content-margin);
       border-top: 1px solid #e2e8f0;
       padding-top: 8px;
       display: flex;
@@ -124,54 +111,22 @@ export const OFFICIAL_DOC_TEMPLATE = `<!DOCTYPE html>
       color: #64748b;
       font-weight: 600;
       text-transform: uppercase;
-      background-color: white;
+      height: 100%;
     }
     .footer-left-brand img { height: 30px; width: auto; }
 
-    /* CONTADOR DE PÁGINAS ISOLADO (Position Fixed para funcionar o incremento) */
-    .fixed-page-number {
-      position: absolute;
-      bottom: 15mm;
-      right: var(--content-margin);
-      font-size: 7pt;
-      color: #64748b;
-      font-weight: 600;
-      text-transform: uppercase;
-      z-index: 2000;
-    }
-    
-    .fixed-page-number::after {
-      counter-increment: page;
-      content: "PÁGINA " counter(page, decimal-leading-zero);
-    }
-
-    /* CONTEÚDO DO CORPO */
-    .content-cell {
-      padding: 0 var(--content-margin);
-      vertical-align: top;
-    }
-
-    .document-body {
+    /* --- ESTILOS DE CONTEÚDO (TIPOGRAFIA) --- */
+    p {
+      text-indent: 2.5cm;
+      margin-bottom: 0.8em;
       font-size: 10.5pt;
       line-height: 1.5;
       text-align: justify;
-      padding-top: 20px;
-      padding-bottom: 20px;
-      
       word-wrap: break-word;
-      overflow-wrap: break-word;
-      word-break: break-word;
-      hyphens: auto;
-      width: 100%;
     }
 
-    .document-body p {
-      text-indent: 2.5cm;
-      margin-bottom: 0.5em; 
-    }
-    
     .recipient-block { margin-bottom: 20px; font-size: 11pt; }
-    .recipient-line { margin-bottom: 4px; }
+    .recipient-line { margin-bottom: 4px; text-indent: 0 !important; }
 
     .caixa-assunto {
       background-color: #f1f5f9;
@@ -179,62 +134,52 @@ export const OFFICIAL_DOC_TEMPLATE = `<!DOCTYPE html>
       padding: 12px;
       margin-bottom: 20px;
       font-weight: 700;
-      page-break-inside: avoid;
+      font-size: 10.5pt;
+      text-indent: 0;
     }
 
     .secao-titulo {
       font-weight: 800;
       text-transform: uppercase;
-      margin-top: 20px;
+      margin-top: 25px;
       margin-bottom: 10px;
       border-bottom: 1px solid #e2e8f0;
       font-size: 11pt;
-      page-break-after: avoid;
+      text-indent: 0;
     }
 
+    /* Tabelas */
     .data-table {
-      width: 100% !important;
+      width: 100%;
       border-collapse: collapse;
       margin: 15px 0;
       font-size: 9.5pt;
-      page-break-inside: auto;
       table-layout: fixed;
     }
-    .data-table tr { page-break-inside: avoid; page-break-after: auto; }
-    .data-table th {
-      background-color: #e2e8f0;
-      color: var(--accent);
-      font-weight: 800;
-      padding: 8px;
+    .data-table th, .data-table td {
       border: 1px solid #cbd5e1;
-      text-align: center;
-      overflow-wrap: break-word;
-    }
-    .data-table td {
-      padding: 8px;
-      border: 1px solid #cbd5e1;
-      vertical-align: middle;
-      white-space: normal;
-      overflow-wrap: break-word;
+      padding: 6px 8px;
       word-wrap: break-word;
-      word-break: break-word;
+      overflow-wrap: break-word;
     }
+    .data-table th { background-color: #e2e8f0; color: var(--accent); font-weight: 800; text-align: center; }
     .data-table tbody tr:nth-child(even) { background-color: #f1f5f9; }
 
+    /* Assinaturas */
     .signatures-container {
-      margin-top: 80px; 
+      margin-top: 60px;
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
       gap: 40px;
-      page-break-inside: avoid;
+      padding-bottom: 20px;
     }
-    
     .signature-box { text-align: center; min-width: 200px; }
     .sig-line { width: 100%; max-width: 250px; border-top: 1px solid #000; margin: 0 auto 5px auto; }
-    .sig-name { font-weight: 800; text-transform: uppercase; font-size: 10pt; }
-    .sig-sub { font-size: 8.5pt; color: #475569; }
+    .sig-name { font-weight: 800; text-transform: uppercase; font-size: 10pt; text-indent: 0; }
+    .sig-sub { font-size: 8.5pt; color: #475569; text-indent: 0; }
 
+    /* Botão Imprimir */
     .btn-print {
       position: fixed;
       bottom: 30px;
@@ -259,128 +204,156 @@ export const OFFICIAL_DOC_TEMPLATE = `<!DOCTYPE html>
       body { 
         background-color: white; 
         padding: 0; 
-        display: block;
-        margin: 0;
+        display: block; 
       }
-      
       .a4-page { 
-        width: 100%; 
         box-shadow: none; 
         margin: 0; 
-        padding: 0;
-        background: none;
-        min-height: auto;
-        display: block;
+        page-break-after: always;
+        width: 100%;
+        height: 100%; /* Deixa o navegador controlar, mas o conteúdo já foi fatiado pelo JS */
       }
-      
       .btn-print { display: none; }
       
-      /* Garante repetição */
-      thead.report-header { display: table-header-group !important; }
-      tfoot.report-footer { display: table-footer-group !important; }
-      
-      /* Contador de páginas fixo para funcionar corretamente */
-      .fixed-page-number {
-        position: fixed;
-        bottom: 15mm;
-        right: 1.5cm; /* Margem direita de impressão */
-        z-index: 3000;
+      /* FIX CRÍTICO: Esconde o container fonte na impressão para evitar duplicação */
+      #source-content {
+        display: none !important;
+        visibility: hidden !important;
+        position: absolute !important;
+        left: -99999px !important;
       }
 
-      /* Ajuste de margens do conteúdo */
-      .content-cell {
-         /* Na impressão, o navegador já define margens via @page, então ajustamos o padding interno */
-         padding-left: 0;
-         padding-right: 0;
-      }
-      
-      /* Importante: Margens da página física */
-      @page { 
-        size: A4;
-        /* Definimos margem 0 e controlamos o espaçamento via CSS da tabela para garantir headers full-width */
-        margin: 0mm; 
-      }
-      
-      /* Margem segura interna para o conteúdo não colar na borda do papel, exceto headers que podem ir até a borda */
-      .document-body {
-        padding-left: 3cm;  /* Margem Esquerda Oficial */
-        padding-right: 1.5cm; /* Margem Direita Oficial */
-      }
+      @page { size: A4; margin: 0; }
     }
   </style>
 </head>
 <body>
 
-  <button class="btn-print" onclick="window.print()">
-    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2-2v5a2 2 0 0 1-2 2h-2m-2 4H8v-4h8v4z"></path></svg>
-    IMPRIMIR
-  </button>
+  <button class="btn-print" onclick="window.print()">IMPRIMIR DOCUMENTO</button>
 
-  <div class="a4-page">
-    
-    <!-- Contador de Páginas (Separado para funcionar o incremento em todas as páginas) -->
-    <div class="fixed-page-number"></div>
+  <!-- ÁREA DE RENDEREIZAÇÃO (Vazia no início, preenchida pelo JS) -->
+  <div id="print-root"></div>
 
-    <!-- TABELA ESTRUTURAL PRINCIPAL -->
-    <table class="report-container">
-      
-      <!-- CABEÇALHO (Repete automaticamente) -->
-      <thead class="report-header">
-        <tr>
-          <td class="header-cell">
-            <div class="header-content">
-              <div class="header-left">
-                <img src="https://i.postimg.cc/529vS7wJ/brasao-municipio.png" alt="Brasão">
-                <div class="titles">
-                  <h1>Prefeitura Municipal de Perobal</h1>
-                  <h2>Secretaria Municipal de Saúde<br>Diretoria Vigilância em Saúde</h2>
-                </div>
-              </div>
-              <div class="header-right">
-                <p>{{REF_ID}}</p>
-                <p>{{DOC_DATE}}</p>
-              </div>
-            </div>
-          </td>
-        </tr>
-      </thead>
-
-      <!-- CORPO DO DOCUMENTO -->
-      <tbody>
-        <tr>
-          <td class="content-cell">
-            <div class="document-body">
-              {{RECIPIENT_BLOCK}}
-              
-              [INSERIR CONTEÚDO AQUI]
-              
-              <div class="signatures-container">
-                {{SIGNATURES_BLOCK}}
-              </div>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-
-      <!-- RODAPÉ (Repete automaticamente) -->
-      <tfoot class="report-footer">
-        <tr>
-          <td class="footer-cell">
-            <div class="footer-content">
-              <div class="footer-left-brand">
-                <img src="https://i.ibb.co/4nPDxkqx/Logo-adminstr.png" alt="Logo Administração">
-              </div>
-              <span style="font-size: 6.5pt;">{{TIMESTAMP}}</span>
-              <!-- Espaço reservado para o contador fixo não sobrepor texto -->
-              <span style="width: 80px;"></span>
-            </div>
-          </td>
-        </tr>
-      </tfoot>
-
-    </table>
-
+  <!-- CONTEÚDO FONTE (Invisível, usado como 'banco de dados' para o script) -->
+  <div id="source-content" style="position: absolute; left: -9999px; width: 170mm; visibility: hidden;">
+     {{RECIPIENT_BLOCK}}
+     [INSERIR CONTEÚDO AQUI]
+     {{SIGNATURES_BLOCK}}
   </div>
+
+  <!-- TEMPLATES JS (Strings para injeção) -->
+  <script>
+    const CONFIG = {
+       // Altura máxima segura para o conteúdo (A4 px - Header - Footer - Margens)
+       // Ajuste fino: 1123px (Total) - 140px (Header) - 80px (Footer) - 40px (Paddings) = ~863px
+       MAX_CONTENT_HEIGHT: 860, 
+       REF_ID: '{{REF_ID}}',
+       DOC_DATE: '{{DOC_DATE}}',
+       TIMESTAMP: '{{TIMESTAMP}}'
+    };
+
+    function getHeaderHTML() {
+      return \`
+        <div class="header-content">
+          <div class="header-left">
+            <img src="https://i.postimg.cc/529vS7wJ/brasao-municipio.png" alt="Brasão">
+            <div class="titles">
+              <h1>Prefeitura Municipal de Perobal</h1>
+              <h2>Secretaria Municipal de Saúde<br>Diretoria Vigilância em Saúde</h2>
+            </div>
+          </div>
+          <div class="header-right">
+            <p>\${CONFIG.REF_ID}</p>
+            <p>\${CONFIG.DOC_DATE}</p>
+          </div>
+        </div>\`;
+    }
+
+    function getFooterHTML(pageStr) {
+      return \`
+        <div class="footer-content">
+          <div class="footer-left-brand">
+            <img src="https://i.ibb.co/4nPDxkqx/Logo-adminstr.png" alt="Logo Administração">
+          </div>
+          <span style="font-size: 6.5pt;">\${CONFIG.TIMESTAMP}</span>
+          <span class="page-count">\${pageStr}</span>
+        </div>\`;
+    }
+
+    // --- MOTOR DE PAGINAÇÃO ---
+    window.onload = function() {
+      const source = document.getElementById('source-content');
+      const printRoot = document.getElementById('print-root');
+      
+      // Coletamos todos os elementos de 'primeiro nível' gerados
+      // Ex: <p>, <table>, <div class="recipient-block">
+      const contentNodes = Array.from(source.children);
+
+      let pages = [];
+      let currentPage = createNewPage();
+      let currentContentDiv = currentPage.querySelector('.page-content-area');
+      
+      pages.push(currentPage);
+      printRoot.appendChild(currentPage);
+
+      contentNodes.forEach(node => {
+        // Clona o nó para testar
+        let clone = node.cloneNode(true);
+        currentContentDiv.appendChild(clone);
+
+        // Verifica altura
+        // scrollHeight nos dá a altura real ocupada pelo conteúdo
+        if (currentContentDiv.scrollHeight > CONFIG.MAX_CONTENT_HEIGHT) {
+           // Estourou! Remove o nó desta página
+           currentContentDiv.removeChild(clone);
+
+           // Cria nova página
+           currentPage = createNewPage();
+           currentContentDiv = currentPage.querySelector('.page-content-area');
+           
+           // Adiciona o nó na nova página
+           currentContentDiv.appendChild(clone);
+           
+           pages.push(currentPage);
+           printRoot.appendChild(currentPage);
+        }
+      });
+
+      // Pós-processamento: Atualizar rodapés com "Página X de Y"
+      const totalPages = pages.length;
+      pages.forEach((page, index) => {
+         const pageNum = index + 1;
+         const str = 'PÁGINA ' + String(pageNum).padStart(2, '0') + ' DE ' + String(totalPages).padStart(2, '0');
+         
+         const footerInner = page.querySelector('.page-footer');
+         footerInner.innerHTML = getFooterHTML(str);
+      });
+    };
+
+    function createNewPage() {
+      const page = document.createElement('div');
+      page.className = 'a4-page';
+      
+      // Header
+      const header = document.createElement('div');
+      header.className = 'page-header';
+      header.innerHTML = getHeaderHTML();
+      page.appendChild(header);
+
+      // Content Container
+      const content = document.createElement('div');
+      content.className = 'page-content-area';
+      page.appendChild(content);
+
+      // Footer (Placeholder)
+      const footer = document.createElement('div');
+      footer.className = 'page-footer';
+      // Será preenchido no final
+      page.appendChild(footer);
+
+      return page;
+    }
+  </script>
 
 </body>
 </html>`;
