@@ -15,9 +15,8 @@ export const OFFICIAL_DOC_TEMPLATE = `<!DOCTYPE html>
       --paper: #ffffff;
       --page-width: 210mm;
       
-      /* Ajuste de dimensões conforme solicitado */
-      --header-height: 130px; /* Reduzido de 140px */
-      --footer-height: 70px;  /* Reduzido de 80px */
+      --header-height: 130px; 
+      --footer-height: 70px;  
       --content-margin: 20mm;
     }
 
@@ -31,10 +30,7 @@ export const OFFICIAL_DOC_TEMPLATE = `<!DOCTYPE html>
       align-items: center;
       padding: 40px 0;
       color: #1e293b;
-      
-      /* Inicializa contador de páginas */
       counter-reset: page;
-      
       -webkit-font-smoothing: antialiased;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
@@ -45,70 +41,46 @@ export const OFFICIAL_DOC_TEMPLATE = `<!DOCTYPE html>
       width: var(--page-width);
       min-height: 297mm;
       background-color: var(--paper);
-      padding: 0 var(--content-margin);
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
       position: relative;
       margin-bottom: 30px;
       display: flex;
       flex-direction: column;
+      /* Padding removido aqui pois será controlado pelas células da tabela para garantir alinhamento */
+      padding: 0; 
     }
 
-    /* ESTRUTURA DE REPETIÇÃO PARA IMPRESSÃO */
+    /* ESTRUTURA DE REPETIÇÃO */
     table.report-container {
       width: 100%;
       border-collapse: collapse;
       border-spacing: 0;
+      table-layout: fixed;
     }
     
-    tr, td {
-      border: none;
-      padding: 0;
+    tr, td { border: none; padding: 0; }
+
+    /* ESTILOS DE CABEÇALHO (Repete em todas as páginas) */
+    thead.report-header {
+      display: table-header-group;
     }
 
-    /* Espaçadores (Reservam o lugar físico no fluxo do documento) */
-    .header-space { 
-      height: var(--header-height); 
-      display: block;
-    }
-    
-    .footer-space { 
-      height: var(--footer-height); 
-      display: block;
-    }
-
-    /* ELEMENTOS FIXOS (Ficam 'flutuando' sobre os espaçadores em cada página) */
-    .page-header {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
+    .header-cell {
+      /* Altura fixa para reservar espaço */
       height: var(--header-height);
-      padding: 15mm var(--content-margin) 0 var(--content-margin);
-      background: white;
-      z-index: 1000;
-      overflow: hidden;
+      vertical-align: top;
     }
 
-    .page-footer {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: var(--footer-height);
-      padding: 0 var(--content-margin) 15mm var(--content-margin);
-      background: white;
-      z-index: 1000;
-      overflow: hidden;
-    }
-
-    /* Layout Interno do Header */
     .header-content {
+      width: 100%;
+      height: 100%;
+      padding: 15mm var(--content-margin) 0 var(--content-margin);
       display: flex;
       justify-content: space-between;
       align-items: flex-end;
       border-bottom: 2px solid var(--primary);
       padding-bottom: 8px;
-      height: 100%;
+      background-color: white;
     }
 
     .header-left { display: flex; align-items: center; gap: 15px; }
@@ -129,8 +101,20 @@ export const OFFICIAL_DOC_TEMPLATE = `<!DOCTYPE html>
     .header-right { text-align: right; margin-bottom: 2px; }
     .header-right p { font-size: 8pt; font-weight: 700; color: #64748b; text-transform: uppercase; line-height: 1.4; }
 
-    /* Layout Interno do Footer */
+
+    /* ESTILOS DE RODAPÉ (Repete em todas as páginas) */
+    tfoot.report-footer {
+      display: table-footer-group;
+    }
+
+    .footer-cell {
+      height: var(--footer-height);
+      vertical-align: bottom;
+    }
+
     .footer-content {
+      width: 100%;
+      padding: 0 var(--content-margin) 15mm var(--content-margin);
       border-top: 1px solid #e2e8f0;
       padding-top: 8px;
       display: flex;
@@ -140,29 +124,50 @@ export const OFFICIAL_DOC_TEMPLATE = `<!DOCTYPE html>
       color: #64748b;
       font-weight: 600;
       text-transform: uppercase;
-      height: 100%;
+      background-color: white;
     }
     .footer-left-brand img { height: 30px; width: auto; }
 
-    /* Contador de Páginas CSS - Formato PÁGINA 01 */
-    .page-count::after {
+    /* CONTADOR DE PÁGINAS ISOLADO (Position Fixed para funcionar o incremento) */
+    .fixed-page-number {
+      position: absolute;
+      bottom: 15mm;
+      right: var(--content-margin);
+      font-size: 7pt;
+      color: #64748b;
+      font-weight: 600;
+      text-transform: uppercase;
+      z-index: 2000;
+    }
+    
+    .fixed-page-number::after {
       counter-increment: page;
       content: "PÁGINA " counter(page, decimal-leading-zero);
     }
 
-    /* Estilos de Conteúdo */
+    /* CONTEÚDO DO CORPO */
+    .content-cell {
+      padding: 0 var(--content-margin);
+      vertical-align: top;
+    }
+
     .document-body {
       font-size: 10.5pt;
       line-height: 1.5;
       text-align: justify;
-      padding-top: 10px;
-      padding-bottom: 10px;
-      word-wrap: break-word; /* FIX: Evita estouro de texto na margem direita. */
+      padding-top: 20px;
+      padding-bottom: 20px;
+      
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      word-break: break-word;
+      hyphens: auto;
+      width: 100%;
     }
 
     .document-body p {
-      text-indent: 2.5cm; /* Ajustado conforme Manual de Redação (item 5.1.6) */
-      margin-bottom: 0.5em; /* Espaçamento entre parágrafos */
+      text-indent: 2.5cm;
+      margin-bottom: 0.5em; 
     }
     
     .recipient-block { margin-bottom: 20px; font-size: 11pt; }
@@ -188,12 +193,12 @@ export const OFFICIAL_DOC_TEMPLATE = `<!DOCTYPE html>
     }
 
     .data-table {
-      width: 100%;
+      width: 100% !important;
       border-collapse: collapse;
       margin: 15px 0;
       font-size: 9.5pt;
       page-break-inside: auto;
-      table-layout: fixed; /* FIX: Força a tabela a respeitar a largura do container. */
+      table-layout: fixed;
     }
     .data-table tr { page-break-inside: avoid; page-break-after: auto; }
     .data-table th {
@@ -203,19 +208,21 @@ export const OFFICIAL_DOC_TEMPLATE = `<!DOCTYPE html>
       padding: 8px;
       border: 1px solid #cbd5e1;
       text-align: center;
+      overflow-wrap: break-word;
     }
     .data-table td {
       padding: 8px;
       border: 1px solid #cbd5e1;
       vertical-align: middle;
-      word-wrap: break-word; /* FIX: Quebra palavras longas dentro das células. */
+      white-space: normal;
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+      word-break: break-word;
     }
-    .data-table tbody tr:nth-child(even) {
-      background-color: #f1f5f9; /* Adiciona fundo em linhas alternadas (zebrado) */
-    }
+    .data-table tbody tr:nth-child(even) { background-color: #f1f5f9; }
 
     .signatures-container {
-      margin-top: 80px; /* Aumentado de 50px */
+      margin-top: 80px; 
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
@@ -247,7 +254,7 @@ export const OFFICIAL_DOC_TEMPLATE = `<!DOCTYPE html>
       text-transform: uppercase;
     }
 
-    /* --- REGRAS CRÍTICAS PARA IMPRESSÃO EM MÚLTIPLAS PÁGINAS --- */
+    /* --- IMPRESSÃO --- */
     @media print {
       body { 
         background-color: white; 
@@ -268,45 +275,36 @@ export const OFFICIAL_DOC_TEMPLATE = `<!DOCTYPE html>
       
       .btn-print { display: none; }
       
-      /* Força o navegador a repetir o thead e tfoot em cada página */
+      /* Garante repetição */
       thead.report-header { display: table-header-group !important; }
       tfoot.report-footer { display: table-footer-group !important; }
       
-      /* Elementos fixos posicionados relative à janela de impressão */
-      .page-header { 
-        position: fixed; 
-        top: 0; 
-        left: 0;
-        width: 100%;
-        height: var(--header-height);
-        background-color: white; 
-        /* Padding específico para margens de impressão (3cm esq, 1.5cm dir) */
-        padding: 10mm 1.5cm 0 3cm;
-        z-index: 1000;
-      }
-      
-      .page-footer { 
-        position: fixed; 
-        bottom: 0; 
-        left: 0;
-        width: 100%;
-        height: var(--footer-height);
-        background-color: white;
-        /* Padding específico para margens de impressão (3cm esq, 1.5cm dir) */
-        padding: 0 1.5cm 10mm 3cm;
-        z-index: 1000;
+      /* Contador de páginas fixo para funcionar corretamente */
+      .fixed-page-number {
+        position: fixed;
+        bottom: 15mm;
+        right: 1.5cm; /* Margem direita de impressão */
+        z-index: 3000;
       }
 
-      /* Margens do conteúdo para alinhar com header/footer */
-      .document-body {
-        padding-left: 3cm;
-        padding-right: 1.5cm;
+      /* Ajuste de margens do conteúdo */
+      .content-cell {
+         /* Na impressão, o navegador já define margens via @page, então ajustamos o padding interno */
+         padding-left: 0;
+         padding-right: 0;
       }
       
-      /* Reset page margins so our CSS controls it */
+      /* Importante: Margens da página física */
       @page { 
         size: A4;
+        /* Definimos margem 0 e controlamos o espaçamento via CSS da tabela para garantir headers full-width */
         margin: 0mm; 
+      }
+      
+      /* Margem segura interna para o conteúdo não colar na borda do papel, exceto headers que podem ir até a borda */
+      .document-body {
+        padding-left: 3cm;  /* Margem Esquerda Oficial */
+        padding-right: 1.5cm; /* Margem Direita Oficial */
       }
     }
   </style>
@@ -320,47 +318,37 @@ export const OFFICIAL_DOC_TEMPLATE = `<!DOCTYPE html>
 
   <div class="a4-page">
     
-    <!-- HEADER FIXO -->
-    <div class="page-header">
-      <div class="header-content">
-        <div class="header-left">
-          <img src="https://i.postimg.cc/529vS7wJ/brasao-municipio.png" alt="Brasão">
-          <div class="titles">
-            <h1>Prefeitura Municipal de Perobal</h1>
-            <h2>Secretaria Municipal de Saúde<br>Diretoria Vigilância em Saúde</h2>
-          </div>
-        </div>
-        <div class="header-right">
-          <p>{{REF_ID}}</p>
-          <p>{{DOC_DATE}}</p>
-        </div>
-      </div>
-    </div>
+    <!-- Contador de Páginas (Separado para funcionar o incremento em todas as páginas) -->
+    <div class="fixed-page-number"></div>
 
-    <!-- FOOTER FIXO -->
-    <div class="page-footer">
-      <div class="footer-content">
-        <div class="footer-left-brand">
-          <img src="https://i.ibb.co/4nPDxkqx/Logo-adminstr.png" alt="Logo Administração">
-        </div>
-        <span style="font-size: 6.5pt;">{{TIMESTAMP}}</span>
-        <span class="page-count"></span>
-      </div>
-    </div>
-
-    <!-- TABELA ESTRUTURAL PARA FLUXO DE CONTEÚDO -->
+    <!-- TABELA ESTRUTURAL PRINCIPAL -->
     <table class="report-container">
+      
+      <!-- CABEÇALHO (Repete automaticamente) -->
       <thead class="report-header">
         <tr>
-          <td>
-            <!-- Espaço reservado para o header fixo -->
-            <div class="header-space">&nbsp;</div>
+          <td class="header-cell">
+            <div class="header-content">
+              <div class="header-left">
+                <img src="https://i.postimg.cc/529vS7wJ/brasao-municipio.png" alt="Brasão">
+                <div class="titles">
+                  <h1>Prefeitura Municipal de Perobal</h1>
+                  <h2>Secretaria Municipal de Saúde<br>Diretoria Vigilância em Saúde</h2>
+                </div>
+              </div>
+              <div class="header-right">
+                <p>{{REF_ID}}</p>
+                <p>{{DOC_DATE}}</p>
+              </div>
+            </div>
           </td>
         </tr>
       </thead>
+
+      <!-- CORPO DO DOCUMENTO -->
       <tbody>
         <tr>
-          <td>
+          <td class="content-cell">
             <div class="document-body">
               {{RECIPIENT_BLOCK}}
               
@@ -373,14 +361,23 @@ export const OFFICIAL_DOC_TEMPLATE = `<!DOCTYPE html>
           </td>
         </tr>
       </tbody>
+
+      <!-- RODAPÉ (Repete automaticamente) -->
       <tfoot class="report-footer">
         <tr>
-          <td>
-            <!-- Espaço reservado para o footer fixo -->
-            <div class="footer-space">&nbsp;</div>
+          <td class="footer-cell">
+            <div class="footer-content">
+              <div class="footer-left-brand">
+                <img src="https://i.ibb.co/4nPDxkqx/Logo-adminstr.png" alt="Logo Administração">
+              </div>
+              <span style="font-size: 6.5pt;">{{TIMESTAMP}}</span>
+              <!-- Espaço reservado para o contador fixo não sobrepor texto -->
+              <span style="width: 80px;"></span>
+            </div>
           </td>
         </tr>
       </tfoot>
+
     </table>
 
   </div>
