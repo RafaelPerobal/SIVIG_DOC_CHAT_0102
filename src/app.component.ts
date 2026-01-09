@@ -238,7 +238,7 @@ export class AppComponent {
             if (document.body.contains(iframe)) document.body.removeChild(iframe);
           }, 5000);
         }
-      }, 1000);
+      }, 2000);
     } catch (e) {
       console.error('Erro ao escrever no iframe:', e);
       if (document.body.contains(iframe)) document.body.removeChild(iframe);

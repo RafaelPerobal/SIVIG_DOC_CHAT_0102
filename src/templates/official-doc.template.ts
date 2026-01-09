@@ -16,15 +16,15 @@ export const OFFICIAL_DOC_TEMPLATE = `<!DOCTYPE html>
       
       /* Dimensões A4 Exatas para Web */
       --a4-width: 210mm;
-      --a4-height: 297mm; /* Aproximadamente 1123px em 96dpi */
+      --a4-height: 297mm;
       
       /* Áreas Reservadas */
       --header-height: 140px; 
       --footer-height: 80px;
       --margin-side: 20mm;
       
-      /* Altura segura para conteúdo = A4 - Header - Footer - Padding de segurança */
-      --content-height-limit: 900px; 
+      /* Altura segura para conteúdo */
+      --content-height-limit: 880px; 
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -48,9 +48,9 @@ export const OFFICIAL_DOC_TEMPLATE = `<!DOCTYPE html>
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
       position: relative;
       margin-bottom: 30px;
-      overflow: hidden; /* Garante que nada estoure visualmente */
+      overflow: hidden; 
       display: block;
-      page-break-after: always; /* Força nova folha na impressão */
+      page-break-after: always;
     }
 
     /* Elementos Absolutos na Página */
@@ -62,7 +62,7 @@ export const OFFICIAL_DOC_TEMPLATE = `<!DOCTYPE html>
       height: var(--header-height);
       padding: 15mm var(--margin-side) 0 var(--margin-side);
       background: white;
-      z-index: 10;
+      z-index: 20;
     }
 
     .page-footer {
@@ -73,16 +73,26 @@ export const OFFICIAL_DOC_TEMPLATE = `<!DOCTYPE html>
       height: var(--footer-height);
       padding: 0 var(--margin-side) 15mm var(--margin-side);
       background: white;
+      z-index: 20;
+    }
+
+    /* MUDANÇA: Usar padding-top/bottom em vez de top/bottom absoluto para o container de conteúdo
+       Isso ajuda navegadores a renderizarem o texto corretamente */
+    .page-content-area {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      padding-top: var(--header-height);
+      padding-bottom: var(--footer-height);
+      padding-left: var(--margin-side);
+      padding-right: var(--margin-side);
       z-index: 10;
     }
 
-    .page-content-area {
-      position: absolute;
-      top: var(--header-height);
-      left: 0;
-      width: 100%;
-      /* Altura dinâmica preenchida pelo script, mas com limite visual */
-      padding: 10px var(--margin-side);
+    /* Container interno para cálculo de altura do JS */
+    .content-flow-wrapper {
+        width: 100%;
+        display: block;
     }
 
     /* --- LAYOUT DO HEADER/FOOTER --- */
@@ -123,9 +133,10 @@ export const OFFICIAL_DOC_TEMPLATE = `<!DOCTYPE html>
       line-height: 1.5;
       text-align: justify;
       word-wrap: break-word;
+      color: #000;
     }
 
-    .recipient-block { margin-bottom: 20px; font-size: 11pt; }
+    .recipient-block { margin-bottom: 20px; font-size: 11pt; color: #000; }
     .recipient-line { margin-bottom: 4px; text-indent: 0 !important; }
 
     .caixa-assunto {
@@ -136,6 +147,7 @@ export const OFFICIAL_DOC_TEMPLATE = `<!DOCTYPE html>
       font-weight: 700;
       font-size: 10.5pt;
       text-indent: 0;
+      color: #000;
     }
 
     .secao-titulo {
@@ -146,6 +158,7 @@ export const OFFICIAL_DOC_TEMPLATE = `<!DOCTYPE html>
       border-bottom: 1px solid #e2e8f0;
       font-size: 11pt;
       text-indent: 0;
+      color: #000;
     }
 
     /* Tabelas */
@@ -161,6 +174,7 @@ export const OFFICIAL_DOC_TEMPLATE = `<!DOCTYPE html>
       padding: 6px 8px;
       word-wrap: break-word;
       overflow-wrap: break-word;
+      color: #000;
     }
     .data-table th { background-color: #e2e8f0; color: var(--accent); font-weight: 800; text-align: center; }
     .data-table tbody tr:nth-child(even) { background-color: #f1f5f9; }
@@ -174,7 +188,7 @@ export const OFFICIAL_DOC_TEMPLATE = `<!DOCTYPE html>
       gap: 40px;
       padding-bottom: 20px;
     }
-    .signature-box { text-align: center; min-width: 200px; }
+    .signature-box { text-align: center; min-width: 200px; color: #000; }
     .sig-line { width: 100%; max-width: 250px; border-top: 1px solid #000; margin: 0 auto 5px auto; }
     .sig-name { font-weight: 800; text-transform: uppercase; font-size: 10pt; text-indent: 0; }
     .sig-sub { font-size: 8.5pt; color: #475569; text-indent: 0; }
@@ -199,28 +213,52 @@ export const OFFICIAL_DOC_TEMPLATE = `<!DOCTYPE html>
       text-transform: uppercase;
     }
 
-    /* --- IMPRESSÃO --- */
+    /* --- IMPRESSÃO ROBUSTA --- */
     @media print {
-      body { 
-        background-color: white; 
-        padding: 0; 
-        display: block; 
+      body, html { 
+        background-color: white !important; 
+        padding: 0 !important; 
+        margin: 0 !important;
+        display: block !important; /* CRÍTICO: Remove flex layout na impressão */
+        width: 100% !important;
+        height: 100% !important;
+        overflow: visible !important;
       }
+
       .a4-page { 
-        box-shadow: none; 
-        margin: 0; 
-        page-break-after: always;
-        width: 100%;
-        height: 100%; /* Deixa o navegador controlar, mas o conteúdo já foi fatiado pelo JS */
+        box-shadow: none !important; 
+        margin: 0 !important; 
+        padding: 0 !important;
+        page-break-after: always !important;
+        page-break-inside: avoid !important;
+        width: 210mm !important;
+        height: 297mm !important; /* Altura fixa A4 */
+        position: relative !important;
+        display: block !important;
+        overflow: hidden !important; /* Mantém header/footer fixos visualmente */
       }
-      .btn-print { display: none; }
+
+      /* Garante visibilidade do conteúdo */
+      .page-content-area, 
+      .content-flow-wrapper,
+      .page-header, 
+      .page-footer,
+      p, div, span, table {
+        visibility: visible !important;
+        opacity: 1 !important;
+      }
       
-      /* FIX CRÍTICO: Esconde o container fonte na impressão para evitar duplicação */
+      .btn-print { display: none !important; }
+      
+      /* FIX CRÍTICO: Esconde o container fonte na impressão */
       #source-content {
         display: none !important;
-        visibility: hidden !important;
-        position: absolute !important;
-        left: -99999px !important;
+      }
+      
+      /* Garante cores sólidas para texto */
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
       }
 
       @page { size: A4; margin: 0; }
@@ -235,17 +273,17 @@ export const OFFICIAL_DOC_TEMPLATE = `<!DOCTYPE html>
   <div id="print-root"></div>
 
   <!-- CONTEÚDO FONTE (Invisível, usado como 'banco de dados' para o script) -->
+  <!-- Importante: visibility: hidden aqui, mas o JS vai clonar os filhos. -->
   <div id="source-content" style="position: absolute; left: -9999px; width: 170mm; visibility: hidden;">
      {{RECIPIENT_BLOCK}}
      [INSERIR CONTEÚDO AQUI]
      {{SIGNATURES_BLOCK}}
   </div>
 
-  <!-- TEMPLATES JS (Strings para injeção) -->
+  <!-- TEMPLATES JS -->
   <script>
     const CONFIG = {
        // Altura máxima segura para o conteúdo (A4 px - Header - Footer - Margens)
-       // Ajuste fino: 1123px (Total) - 140px (Header) - 80px (Footer) - 40px (Paddings) = ~863px
        MAX_CONTENT_HEIGHT: 860, 
        REF_ID: '{{REF_ID}}',
        DOC_DATE: '{{DOC_DATE}}',
@@ -280,56 +318,6 @@ export const OFFICIAL_DOC_TEMPLATE = `<!DOCTYPE html>
         </div>\`;
     }
 
-    // --- MOTOR DE PAGINAÇÃO ---
-    window.onload = function() {
-      const source = document.getElementById('source-content');
-      const printRoot = document.getElementById('print-root');
-      
-      // Coletamos todos os elementos de 'primeiro nível' gerados
-      // Ex: <p>, <table>, <div class="recipient-block">
-      const contentNodes = Array.from(source.children);
-
-      let pages = [];
-      let currentPage = createNewPage();
-      let currentContentDiv = currentPage.querySelector('.page-content-area');
-      
-      pages.push(currentPage);
-      printRoot.appendChild(currentPage);
-
-      contentNodes.forEach(node => {
-        // Clona o nó para testar
-        let clone = node.cloneNode(true);
-        currentContentDiv.appendChild(clone);
-
-        // Verifica altura
-        // scrollHeight nos dá a altura real ocupada pelo conteúdo
-        if (currentContentDiv.scrollHeight > CONFIG.MAX_CONTENT_HEIGHT) {
-           // Estourou! Remove o nó desta página
-           currentContentDiv.removeChild(clone);
-
-           // Cria nova página
-           currentPage = createNewPage();
-           currentContentDiv = currentPage.querySelector('.page-content-area');
-           
-           // Adiciona o nó na nova página
-           currentContentDiv.appendChild(clone);
-           
-           pages.push(currentPage);
-           printRoot.appendChild(currentPage);
-        }
-      });
-
-      // Pós-processamento: Atualizar rodapés com "Página X de Y"
-      const totalPages = pages.length;
-      pages.forEach((page, index) => {
-         const pageNum = index + 1;
-         const str = 'PÁGINA ' + String(pageNum).padStart(2, '0') + ' DE ' + String(totalPages).padStart(2, '0');
-         
-         const footerInner = page.querySelector('.page-footer');
-         footerInner.innerHTML = getFooterHTML(str);
-      });
-    };
-
     function createNewPage() {
       const page = document.createElement('div');
       page.className = 'a4-page';
@@ -340,18 +328,82 @@ export const OFFICIAL_DOC_TEMPLATE = `<!DOCTYPE html>
       header.innerHTML = getHeaderHTML();
       page.appendChild(header);
 
-      // Content Container
-      const content = document.createElement('div');
-      content.className = 'page-content-area';
-      page.appendChild(content);
+      // Content Container (Com wrapper para fluxo)
+      const contentArea = document.createElement('div');
+      contentArea.className = 'page-content-area';
+      
+      const wrapper = document.createElement('div');
+      wrapper.className = 'content-flow-wrapper';
+      contentArea.appendChild(wrapper);
+      
+      page.appendChild(contentArea);
 
-      // Footer (Placeholder)
+      // Footer
       const footer = document.createElement('div');
       footer.className = 'page-footer';
-      // Será preenchido no final
       page.appendChild(footer);
 
       return page;
+    }
+
+    // --- MOTOR DE PAGINAÇÃO ---
+    function runPagination() {
+      const source = document.getElementById('source-content');
+      if (!source) return;
+
+      const printRoot = document.getElementById('print-root');
+      // Limpa caso já tenha rodado
+      printRoot.innerHTML = ''; 
+
+      const contentNodes = Array.from(source.children);
+
+      let pages = [];
+      let currentPage = createNewPage();
+      let currentWrapper = currentPage.querySelector('.content-flow-wrapper');
+      
+      pages.push(currentPage);
+      printRoot.appendChild(currentPage);
+
+      contentNodes.forEach(node => {
+        let clone = node.cloneNode(true);
+        // Garante visibilidade no clone caso tenha herdado hidden
+        if (clone.style) {
+            clone.style.visibility = 'visible';
+            clone.style.display = 'block';
+        }
+        
+        currentWrapper.appendChild(clone);
+
+        // Verifica altura do wrapper em relação ao limite
+        // Usamos offsetHeight para precisão
+        if (currentWrapper.offsetHeight > CONFIG.MAX_CONTENT_HEIGHT) {
+           currentWrapper.removeChild(clone);
+
+           currentPage = createNewPage();
+           currentWrapper = currentPage.querySelector('.content-flow-wrapper');
+           
+           currentWrapper.appendChild(clone);
+           pages.push(currentPage);
+           printRoot.appendChild(currentPage);
+        }
+      });
+
+      // Rodapés
+      const totalPages = pages.length;
+      pages.forEach((page, index) => {
+         const pageNum = index + 1;
+         const str = 'PÁGINA ' + String(pageNum).padStart(2, '0') + ' DE ' + String(totalPages).padStart(2, '0');
+         const footerInner = page.querySelector('.page-footer');
+         footerInner.innerHTML = getFooterHTML(str);
+      });
+    }
+
+    // Executa quando o DOM estiver pronto e imagens carregadas para cálculo correto
+    window.addEventListener('load', runPagination);
+    
+    // Fallback: Se o load já passou (ex: iframe rápido), tenta rodar imediatamente
+    if (document.readyState === 'complete') {
+        runPagination();
     }
   </script>
 
